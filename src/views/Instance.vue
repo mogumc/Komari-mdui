@@ -17,7 +17,7 @@
     <div class="hw-grid" v-if="nodeInfo.cpu_name">
       <mdui-card class="hw-card" variant="filled">
         <mdui-icon name="memory" style="color:#1a73e8;font-size:20px"></mdui-icon>
-        <div>
+        <div class="hw-text">
           <div class="hw-label">处理器</div>
           <div class="hw-value">{{ nodeInfo.cpu_name }}</div>
           <div class="hw-sub">{{ nodeInfo.cpu_cores || 0 }} 核心</div>
@@ -25,7 +25,7 @@
       </mdui-card>
       <mdui-card class="hw-card" variant="filled">
         <mdui-icon name="laptop" style="color:#34a853;font-size:20px"></mdui-icon>
-        <div>
+        <div class="hw-text">
           <div class="hw-label">系统</div>
           <div class="hw-value">{{ nodeInfo.os || '-' }}</div>
           <div class="hw-sub">{{ nodeInfo.arch || '-' }}</div>
@@ -33,7 +33,7 @@
       </mdui-card>
       <mdui-card class="hw-card" variant="filled" v-if="nodeInfo.gpu_name">
         <mdui-icon name="videogame_asset" style="color:#fbbc04;font-size:20px"></mdui-icon>
-        <div>
+        <div class="hw-text">
           <div class="hw-label">GPU</div>
           <div class="hw-value">{{ nodeInfo.gpu_name }}</div>
         </div>
@@ -539,6 +539,12 @@ const heatmapData = computed(() => {
   align-items: flex-start;
   gap: 12px;
   border-radius: 12px;
+}
+
+.hw-text {
+  min-width: 0;
+  overflow: hidden;
+  flex: 1;
 }
 
 .hw-label {

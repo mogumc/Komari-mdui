@@ -35,12 +35,7 @@
         <div class="card-header">
           <div class="card-title-row">
             <span class="server-name">{{ node.name }}</span>
-            <mdui-badge v-if="isOnline(node.uuid)" style="--mdui-badge-background:#e6f4ea;--mdui-badge-color:#34a853">
-              在线
-            </mdui-badge>
-            <mdui-badge v-else style="--mdui-badge-background:#fce8e6;--mdui-badge-color:#ea4335">
-              离线
-            </mdui-badge>
+            <span class="status-dot" :class="isOnline(node.uuid) ? 'on' : 'off'"></span>
           </div>
           <div class="card-meta">
             <span v-if="node.os"><mdui-icon name="computer" style="font-size:14px"></mdui-icon> {{ node.os }}</span>
@@ -349,6 +344,21 @@ function goInstance(uuid) {
   justify-content: space-between;
   gap: 8px;
   margin-bottom: 6px;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-dot.on {
+  background: #34a853;
+}
+
+.status-dot.off {
+  background: #ea4335;
 }
 
 .server-name {
