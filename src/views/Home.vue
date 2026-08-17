@@ -365,12 +365,17 @@ function goInstance(uuid) {
 .toolbar-groups::-webkit-scrollbar { display: none; }
 
 .group-btn {
-  padding: 3px 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 26px;
+  padding: 0 10px;
   border: 1px solid #e8e8e8;
   border-radius: 14px;
   background: #fff;
   color: #888;
   font-size: 0.78rem;
+  line-height: 1;
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.15s;
