@@ -1,56 +1,25 @@
 <template>
   <div class="home-page">
-    <!-- Stats Bar -->
-    <div class="stats-bar" v-if="nodes.length">
-      <mdui-card class="stat-card" variant="filled">
-        <div class="stat-icon" style="background:#e8f0fe;color:#1a73e8">
-          <mdui-icon name="dns"></mdui-icon>
-        </div>
-        <div class="stat-info">
-          <div class="stat-label">节点总数</div>
-          <div class="stat-value">{{ nodes.length }}</div>
-        </div>
-      </mdui-card>
-      <mdui-card class="stat-card" variant="filled">
-        <div class="stat-icon" style="background:#e6f4ea;color:#34a853">
-          <mdui-icon name="check_circle"></mdui-icon>
-        </div>
-        <div class="stat-info">
-          <div class="stat-label">在线节点</div>
-          <div class="stat-value">{{ onlineCount }}</div>
-        </div>
-      </mdui-card>
-      <mdui-card class="stat-card" variant="filled">
-        <div class="stat-icon" style="background:#fce8e6;color:#ea4335">
-          <mdui-icon name="arrow_upward"></mdui-icon>
-        </div>
-        <div class="stat-info">
-          <div class="stat-label">总上传</div>
-          <div class="stat-value">{{ formatNetSpeed(totalNetOut) }}</div>
-        </div>
-      </mdui-card>
-      <mdui-card class="stat-card" variant="filled">
-        <div class="stat-icon" style="background:#e8f0fe;color:#1a73e8">
-          <mdui-icon name="arrow_downward"></mdui-icon>
-        </div>
-        <div class="stat-info">
-          <div class="stat-label">总下载</div>
-          <div class="stat-value">{{ formatNetSpeed(totalNetIn) }}</div>
-        </div>
-      </mdui-card>
-    </div>
-
-    <!-- Group Filter -->
-    <div class="group-bar" v-if="groupList.length > 1">
-      <mdui-segmented-button-group v-model="activeGroup" selects="single" style="width:100%;overflow-x:auto">
-        <mdui-segmented-button
+    <!-- Compact Toolbar: Stats + Group Filter in one row -->
+    <div class="toolbar" v-if="nodes.length">
+      <div class="toolbar-stats">
+        <span class="stat-item">
+          <mdui-icon name="dns" style="font-size:15px"></mdui-icon>
+          {{ onlineCount }}/{{ nodes.length }} 在线
+        </span>
+        <span class="stat-sep">|</span>
+        <span class="stat-item">↑{{ formatNetSpeed(totalNetOut) }}</span>
+        <span class="stat-item">↓{{ formatNetSpeed(totalNetIn) }}</span>
+      </div>
+      <div class="toolbar-groups" v-if="groupList.length > 1">
+        <button
           v-for="g in groupList"
           :key="g"
-          :value="g"
-          :selected="activeGroup === g"
+          class="group-btn"
+          :class="{ active: activeGroup === g }"
           @click="activeGroup = g"
-        >{{ g === '__all__' ? '全部' : g || '未分组' }}</mdui-segmented-button>
-      </mdui-segmented-button-group>
+        >{{ g === '__all__' ? '全部' : g || '未分组' }}</button>
+      </div>
     </div>
 
     <!-- Server Cards Grid -->
@@ -285,49 +254,71 @@ function goInstance(uuid) {
   padding: 24px 16px;
 }
 
-/* Stats Bar */
-.stats-bar {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.stat-card {
-  padding: 16px;
+/* Toolbar */
+.toolbar {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
-  background: #ffffff;
-  border: 1px solid #f0f0f0;
-  border-radius: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
 }
 
-.stat-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+.toolbar-stats {
   display: flex;
   align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.stat-label {
-  font-size: 0.8rem;
+  gap: 8px;
+  font-size: 0.82rem;
   color: #888;
 }
 
-.stat-value {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #1f1f1f;
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
 }
 
-/* Group Bar */
-.group-bar {
-  margin-bottom: 20px;
+.stat-sep {
+  color: #e0e0e0;
+}
+
+.toolbar-groups {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.toolbar-groups::-webkit-scrollbar {
+  display: none;
+}
+
+.group-btn {
+  padding: 4px 12px;
+  border: 1px solid #e8e8e8;
+  border-radius: 16px;
+  background: #fff;
+  color: #888;
+  font-size: 0.8rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+  line-height: 1.5;
+}
+
+.group-btn:hover {
+  color: #555;
+  border-color: #ccc;
+}
+
+.group-btn.active {
+  background: #f0f0f0;
+  color: #1f1f1f;
+  border-color: #ddd;
+  font-weight: 500;
 }
 
 /* Card Grid */
@@ -459,11 +450,12 @@ function goInstance(uuid) {
 }
 
 @media (max-width: 700px) {
-  .stats-bar {
-    grid-template-columns: repeat(2, 1fr);
-  }
   .card-grid {
     grid-template-columns: 1fr;
+  }
+  .toolbar {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 </style>

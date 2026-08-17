@@ -1,24 +1,16 @@
 <template>
   <div id="app-root">
-    <mdui-top-app-bar scroll-behavior="shadow">
-      <mdui-top-app-bar-title>
-        <router-link to="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:8px">
-          <span style="font-weight:600">{{ siteName || 'Komari' }}</span>
-        </router-link>
-      </mdui-top-app-bar-title>
+    <header class="top-bar">
+      <router-link to="/" class="top-bar-title">
+        <span>{{ siteName || 'Komari' }}</span>
+      </router-link>
       <div style="flex:1"></div>
-      <mdui-chip
-        v-if="wsConnected"
-        icon="check_circle"
-        style="--mdui-chip-label-color: #34a853; margin-right: 8px"
-      >在线</mdui-chip>
-      <mdui-chip
-        v-else
-        icon="error"
-        style="--mdui-chip-label-color: #ea4335; margin-right: 8px"
-      >离线</mdui-chip>
+      <span class="ws-status" :class="wsConnected ? 'on' : 'off'">
+        <span class="ws-dot"></span>
+        {{ wsConnected ? '在线' : '离线' }}
+      </span>
       <mdui-button-icon icon="person" href="/admin" target="_blank"></mdui-button-icon>
-    </mdui-top-app-bar>
+    </header>
 
     <main class="main-content">
       <router-view />
@@ -34,11 +26,15 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, provide, onMounted, onUnmounted } from 'vue'
 import { rpcCall } from './utils/rpc'
 
 const siteName = ref('')
 const version = ref('')
+const wsConnected = ref(false)
+let statusTimer = null
+
+provide('wsConnected', wsConnected)
 
 onMounted(async () => {
   try {
@@ -49,7 +45,22 @@ onMounted(async () => {
     const ver = await rpcCall('common:getVersion')
     if (ver) version.value = ver.version || ''
   } catch {}
+  checkStatus()
+  statusTimer = setInterval(checkStatus, 5000)
 })
+
+onUnmounted(() => {
+  if (statusTimer) clearInterval(statusTimer)
+})
+
+async function checkStatus() {
+  try {
+    await rpcCall('common:getVersion')
+    wsConnected.value = true
+  } catch {
+    wsConnected.value = false
+  }
+}
 </script>
 
 <style scoped>
@@ -59,9 +70,55 @@ onMounted(async () => {
   flex-direction: column;
 }
 
+.top-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  background: #ffffff;
+  border-bottom: 1px solid #f0f0f0;
+  gap: 8px;
+}
+
+.top-bar-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #1f1f1f;
+  text-decoration: none;
+}
+
+.ws-status {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.8rem;
+  color: #999;
+  margin-right: 4px;
+}
+
+.ws-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.ws-status.on .ws-dot {
+  background: #34a853;
+}
+
+.ws-status.off .ws-dot {
+  background: #ea4335;
+}
+
 .main-content {
   flex: 1;
-  padding-top: 64px;
+  padding-top: 52px;
 }
 
 .app-footer {
