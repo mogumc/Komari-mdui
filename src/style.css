@@ -1,0 +1,48 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  --md-sys-color-primary: #1a73e8;
+  --md-sys-color-on-primary: #ffffff;
+  --md-sys-color-surface: #ffffff;
+  --md-sys-color-surface-container: #f8f9fa;
+  --md-sys-color-on-surface: #1f1f1f;
+  --md-sys-color-outline: #e0e0e0;
+  --md-sys-color-outline-variant: #f0f0f0;
+}
+
+body {
+  font-family: 'Roboto', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #fafafa;
+  color: #1f1f1f;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+mdui-card {
+  --mdui-color-surface: #ffffff;
+  background: #ffffff;
+  border: 1px solid #e8e8e8;
+}
+
+.chart-svg svg {
+  width: 100%;
+  height: 80px;
+  display: block;
+}
