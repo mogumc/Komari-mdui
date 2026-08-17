@@ -397,14 +397,7 @@ function goInstance(uuid) {
 }
 
 .server-card.offline {
-  border-color: rgba(234,67,53,0.3);
-  background: repeating-linear-gradient(
-    45deg,
-    transparent,
-    transparent 10px,
-    rgba(234,67,53,0.03) 10px,
-    rgba(234,67,53,0.03) 20px
-  ), #fff;
+  opacity: 0.7;
 }
 
 /* Card Header */
