@@ -1,17 +1,33 @@
 <template>
   <div class="home-page">
-    <!-- Compact Toolbar: Stats + Group Filter in one row -->
-    <div class="toolbar" v-if="nodes.length">
-      <div class="toolbar-stats">
-        <span class="stat-item">
-          <mdui-icon name="dns" style="font-size:15px"></mdui-icon>
-          {{ onlineCount }}/{{ nodes.length }} 在线
-        </span>
-        <span class="stat-sep">|</span>
-        <span class="stat-item">↑{{ formatNetSpeed(totalNetOut) }}</span>
-        <span class="stat-item">↓{{ formatNetSpeed(totalNetIn) }}</span>
+    <!-- Stats Bar -->
+    <div class="stats-card" v-if="nodes.length">
+      <div class="stats-grid">
+        <div class="stat-cell">
+          <div class="stat-cell-label">在线</div>
+          <div class="stat-cell-val">{{ onlineCount }} / {{ nodes.length }}</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-cell-label">地区</div>
+          <div class="stat-cell-val">{{ uniqueRegions }}</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-cell-label">流量</div>
+          <div class="stat-cell-val">↑{{ formatBytes(totalTrafficUp) }}</div>
+          <div class="stat-cell-val">↓{{ formatBytes(totalTrafficDown) }}</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-cell-label">网速</div>
+          <div class="stat-cell-val">↑{{ formatNetSpeed(totalNetOut) }}/s</div>
+          <div class="stat-cell-val">↓{{ formatNetSpeed(totalNetIn) }}/s</div>
+        </div>
       </div>
-      <div class="toolbar-groups" v-if="groupList.length > 1">
+    </div>
+
+    <!-- Group Filter -->
+    <div class="group-bar" v-if="groupList.length > 1">
+      <span class="group-label">分组</span>
+      <div class="toolbar-groups">
         <button
           v-for="g in groupList"
           :key="g"
@@ -28,6 +44,7 @@
         v-for="node in displayNodes"
         :key="node.uuid"
         class="server-card"
+        :class="{ offline: !isOnline(node.uuid) }"
         clickable
         @click="goInstance(node.uuid)"
       >
@@ -37,56 +54,68 @@
             <span class="server-name">{{ node.name }}</span>
             <span class="status-dot" :class="isOnline(node.uuid) ? 'on' : 'off'"></span>
           </div>
-          <div class="card-meta">
-            <span v-if="node.os"><mdui-icon name="computer" style="font-size:14px"></mdui-icon> {{ node.os }}</span>
-            <span v-if="node.region"><mdui-icon name="location_on" style="font-size:14px"></mdui-icon> {{ node.region }}</span>
-          </div>
-          <div class="card-tags" v-if="getTags(node).length">
-            <mdui-chip
-              v-for="t in getTags(node)"
-              :key="t"
-              variant="outlined"
-              style="--mdui-chip-outline-color:#e0e0e0;height:24px;font-size:0.75rem"
-            >{{ t }}</mdui-chip>
-          </div>
         </div>
 
-        <!-- Card Body: Live Metrics -->
-        <div class="card-body" v-if="liveData[node.uuid]">
-          <div class="metric-row">
-            <span class="metric-label">CPU</span>
-            <mdui-linear-progress
-              :value="cpuUsage(node.uuid)"
-              :max="100"
-              style="flex:1;--mdui-linear-progress-indicator-color:#1a73e8"
-            ></mdui-linear-progress>
-            <span class="metric-val">{{ cpuUsage(node.uuid) }}%</span>
+        <!-- Tags -->
+        <div class="card-tags" v-if="getTags(node).length">
+          <span class="tag-pill" v-for="t in getTags(node)" :key="t">{{ t }}</span>
+        </div>
+
+        <div class="card-sep"></div>
+
+        <!-- HW Summary -->
+        <div class="hw-summary" v-if="node.cpu_cores">
+          <span><mdui-icon name="memory" style="font-size:13px;color:#1a73e8"></mdui-icon> {{ node.cpu_cores }}核</span>
+          <span><mdui-icon name="sd_storage" style="font-size:13px;color:#34a853"></mdui-icon> {{ formatBytes(node.mem_total) }}</span>
+          <span><mdui-icon name="storage" style="font-size:13px;color:#fbbc04"></mdui-icon> {{ formatBytes(node.disk_total) }}</span>
+        </div>
+
+        <!-- Progress Bars -->
+        <div class="card-metrics" v-if="liveData[node.uuid]">
+          <div class="pbar-row">
+            <span class="pbar-label">CPU</span>
+            <div class="pbar-track"><div class="pbar-fill" :style="{ width: cpuUsage(node.uuid) + '%', background: barColor(cpuUsage(node.uuid)) }"></div></div>
+            <span class="pbar-val">{{ cpuUsage(node.uuid) }}%</span>
           </div>
-          <div class="metric-row">
-            <span class="metric-label">内存</span>
-            <mdui-linear-progress
-              :value="memUsage(node.uuid)"
-              :max="100"
-              style="flex:1;--mdui-linear-progress-indicator-color:#34a853"
-            ></mdui-linear-progress>
-            <span class="metric-val">{{ memUsage(node.uuid) }}%</span>
+          <div class="pbar-row">
+            <span class="pbar-label">内存</span>
+            <div class="pbar-track"><div class="pbar-fill" :style="{ width: memUsage(node.uuid) + '%', background: barColor(memUsage(node.uuid)) }"></div></div>
+            <span class="pbar-val">{{ memUsage(node.uuid) }}%</span>
+          </div>
+          <div class="pbar-row" v-if="node.swap_total > 0">
+            <span class="pbar-label">Swap</span>
+            <div class="pbar-track"><div class="pbar-fill" :style="{ width: swapUsage(node.uuid) + '%', background: barColor(swapUsage(node.uuid)) }"></div></div>
+            <span class="pbar-val">{{ swapUsage(node.uuid) }}%</span>
+          </div>
+          <div class="pbar-row">
+            <span class="pbar-label">磁盘</span>
+            <div class="pbar-track"><div class="pbar-fill" :style="{ width: diskUsage(node.uuid) + '%', background: barColor(diskUsage(node.uuid)) }"></div></div>
+            <span class="pbar-val">{{ diskUsage(node.uuid) }}%</span>
           </div>
         </div>
-        <div class="card-body placeholder" v-else>
+        <div class="card-metrics placeholder" v-else>
           <span class="no-data">{{ isOnline(node.uuid) ? '等待数据...' : '节点离线' }}</span>
         </div>
 
-        <!-- Card Footer -->
-        <div class="card-footer" v-if="liveData[node.uuid]">
-          <span>
-            <mdui-icon name="swap_vert" style="font-size:14px"></mdui-icon>
-            ↑{{ formatNetSpeed(liveData[node.uuid].net_out) }}
-            ↓{{ formatNetSpeed(liveData[node.uuid].net_in) }}
-          </span>
-          <span>
-            <mdui-icon name="schedule" style="font-size:14px"></mdui-icon>
-            {{ formatUptime(liveData[node.uuid].uptime) }}
-          </span>
+        <div class="card-sep"></div>
+
+        <!-- Bottom info rows -->
+        <div class="info-rows" v-if="liveData[node.uuid]">
+          <div class="info-row">
+            <span class="info-key">网络</span>
+            <span class="info-val">↑{{ formatNetSpeed(liveData[node.uuid].net_out) }}/s ↓{{ formatNetSpeed(liveData[node.uuid].net_in) }}/s</span>
+          </div>
+          <div class="info-row">
+            <span class="info-key">负载</span>
+            <span class="info-val">{{ loadStr(node.uuid) }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-key">到期</span>
+            <span class="info-val">{{ expireStr(node) }}</span>
+            <span class="info-sep">|</span>
+            <span class="info-key">运行</span>
+            <span class="info-val">{{ isOnline(node.uuid) ? formatUptime(liveData[node.uuid].uptime) : '离线' }}</span>
+          </div>
         </div>
       </mdui-card>
     </div>
@@ -106,10 +135,10 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { rpcCall, createRpcSocket } from '../utils/rpc'
-import { formatBytes, formatNetSpeed, formatUptime } from '../utils/format'
+import { formatBytes, formatNetSpeed, formatUptime, remainingDays } from '../utils/format'
 
 const router = useRouter()
 const nodes = ref([])
@@ -136,7 +165,6 @@ const displayNodes = computed(() => {
     list = list.filter(n => (n.group || '').trim() === activeGroup.value)
   }
   list.sort((a, b) => (a.weight ?? 0) - (b.weight ?? 0))
-  // online first
   list.sort((a, b) => {
     const aOn = isOnline(a.uuid) ? 0 : 1
     const bOn = isOnline(b.uuid) ? 0 : 1
@@ -146,17 +174,16 @@ const displayNodes = computed(() => {
 })
 
 // Stats
-const onlineCount = computed(() => {
-  return nodes.value.filter(n => isOnline(n.uuid)).length
+const onlineCount = computed(() => nodes.value.filter(n => isOnline(n.uuid)).length)
+const uniqueRegions = computed(() => {
+  const set = new Set()
+  for (const n of nodes.value) { if (n.region) set.add(n.region) }
+  return set.size
 })
-const totalNetOut = computed(() => {
-  return Object.values(liveData).reduce((s, d) => s + (d.online ? (d.net_out ?? 0) : 0), 0)
-})
-const totalNetIn = computed(() => {
-  return Object.values(liveData).reduce((s, d) => s + (d.online ? (d.net_in ?? 0) : 0), 0)
-})
-
-watch(activeGroup, () => {})
+const totalNetOut = computed(() => Object.values(liveData).reduce((s, d) => s + (d.online ? (d.net_out ?? 0) : 0), 0))
+const totalNetIn = computed(() => Object.values(liveData).reduce((s, d) => s + (d.online ? (d.net_in ?? 0) : 0), 0))
+const totalTrafficUp = computed(() => Object.values(liveData).reduce((s, d) => s + (d.online ? (d.net_total_up ?? 0) : 0), 0))
+const totalTrafficDown = computed(() => Object.values(liveData).reduce((s, d) => s + (d.online ? (d.net_total_down ?? 0) : 0), 0))
 
 onMounted(() => {
   fetchNodes()
@@ -214,23 +241,49 @@ function connectAndPoll() {
   checkOpen()
 }
 
-function isOnline(uuid) {
-  return liveData[uuid]?.online === true
-}
+function isOnline(uuid) { return liveData[uuid]?.online === true }
 
 function cpuUsage(uuid) {
   const d = liveData[uuid]
-  if (!d) return 0
-  return Math.min(100, Math.round(d.cpu ?? 0))
+  return d ? Math.min(100, Math.round(d.cpu ?? 0)) : 0
 }
 
 function memUsage(uuid) {
   const d = liveData[uuid]
-  if (!d) return 0
-  const used = d.ram ?? 0
-  const total = d.ram_total ?? 0
-  if (!total) return 0
-  return Math.min(100, Math.round((used / total) * 100))
+  if (!d || !d.ram_total) return 0
+  return Math.min(100, Math.round((d.ram / d.ram_total) * 100))
+}
+
+function swapUsage(uuid) {
+  const d = liveData[uuid]
+  if (!d || !d.swap_total) return 0
+  return Math.min(100, Math.round((d.swap / d.swap_total) * 100))
+}
+
+function diskUsage(uuid) {
+  const d = liveData[uuid]
+  if (!d || !d.disk_total) return 0
+  return Math.min(100, Math.round((d.disk / d.disk_total) * 100))
+}
+
+function barColor(pct) {
+  if (pct <= 50) return '#34a853'
+  if (pct <= 90) return '#fbbc04'
+  return '#ea4335'
+}
+
+function loadStr(uuid) {
+  const d = liveData[uuid]
+  if (!d) return '-'
+  return `${(d.load ?? 0).toFixed(2)} | ${(d.load5 ?? 0).toFixed(2)} | ${(d.load15 ?? 0).toFixed(2)}`
+}
+
+function expireStr(node) {
+  if (!node.expired_at) return '-'
+  const days = remainingDays(node.expired_at)
+  if (days === null || days > 36500) return '长期'
+  if (days <= 0) return `过期${Math.abs(days)}天`
+  return `${days}天`
 }
 
 function getTags(node) {
@@ -246,36 +299,59 @@ function goInstance(uuid) {
 .home-page {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 24px 16px;
+  padding: 16px;
 }
 
-/* Toolbar */
-.toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
+/* Stats Card */
+.stats-card {
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 12px;
 }
 
-.toolbar-stats {
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 8px;
+  text-align: center;
+}
+
+.stat-cell-label {
+  font-size: 0.75rem;
+  color: #999;
+  margin-bottom: 2px;
+}
+
+.stat-cell-val {
+  font-size: 0.85rem;
+  color: #1f1f1f;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* Group Bar */
+.group-bar {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.82rem;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.group-bar::-webkit-scrollbar { display: none; }
+
+.group-label {
+  font-size: 0.8rem;
   color: #888;
-}
-
-.stat-item {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  white-space: nowrap;
-}
-
-.stat-sep {
-  color: #e0e0e0;
+  flex-shrink: 0;
 }
 
 .toolbar-groups {
@@ -284,85 +360,65 @@ function goInstance(uuid) {
   gap: 4px;
   overflow-x: auto;
   scrollbar-width: none;
-  -ms-overflow-style: none;
 }
 
-.toolbar-groups::-webkit-scrollbar {
-  display: none;
-}
+.toolbar-groups::-webkit-scrollbar { display: none; }
 
 .group-btn {
-  padding: 4px 12px;
+  padding: 3px 10px;
   border: 1px solid #e8e8e8;
-  border-radius: 16px;
+  border-radius: 14px;
   background: #fff;
   color: #888;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.15s;
-  line-height: 1.5;
 }
 
-.group-btn:hover {
-  color: #555;
-  border-color: #ccc;
-}
-
-.group-btn.active {
-  background: #f0f0f0;
-  color: #1f1f1f;
-  border-color: #ddd;
-  font-weight: 500;
-}
+.group-btn:hover { color: #555; border-color: #ccc; }
+.group-btn.active { background: #f0f0f0; color: #1f1f1f; border-color: #ddd; font-weight: 500; }
 
 /* Card Grid */
 .card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
   gap: 16px;
 }
 
 .server-card {
-  padding: 20px;
-  border-radius: 12px;
-  transition: box-shadow 0.2s, transform 0.2s;
+  padding: 16px;
+  border-radius: 10px;
+  transition: box-shadow 0.2s;
 }
 
 .server-card:hover {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
 
-.card-header {
-  margin-bottom: 16px;
+.server-card.offline {
+  border-color: rgba(234,67,53,0.3);
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(234,67,53,0.03) 10px,
+    rgba(234,67,53,0.03) 20px
+  ), #fff;
 }
+
+/* Card Header */
+.card-header { margin-bottom: 8px; }
 
 .card-title-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  margin-bottom: 6px;
-}
-
-.status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.status-dot.on {
-  background: #34a853;
-}
-
-.status-dot.off {
-  background: #ea4335;
 }
 
 .server-name {
-  font-size: 1.05rem;
+  font-size: 1rem;
   font-weight: 600;
   color: #1f1f1f;
   overflow: hidden;
@@ -372,79 +428,133 @@ function goInstance(uuid) {
   min-width: 0;
 }
 
-.card-meta {
-  display: flex;
-  gap: 12px;
-  font-size: 0.82rem;
-  color: #888;
-  margin-bottom: 8px;
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
-.card-meta span {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
+.status-dot.on { background: #34a853; }
+.status-dot.off { background: #ea4335; }
 
+/* Tags */
 .card-tags {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
+  margin-bottom: 8px;
 }
 
-/* Card Body */
-.card-body {
+.tag-pill {
+  font-size: 0.7rem;
+  padding: 1px 8px;
+  border-radius: 10px;
+  background: #f5f5f5;
+  color: #888;
+  border: 1px solid #eee;
+}
+
+/* Separator */
+.card-sep {
+  height: 1px;
+  background: #f0f0f0;
+  margin: 8px 0;
+}
+
+/* HW Summary */
+.hw-summary {
+  display: flex;
+  justify-content: space-around;
+  font-size: 0.78rem;
+  color: #888;
+  margin-bottom: 4px;
+}
+
+.hw-summary span {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+/* Progress Bars */
+.card-metrics {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-bottom: 12px;
+  gap: 6px;
 }
 
-.card-body.placeholder {
+.card-metrics.placeholder {
   align-items: center;
-  padding: 12px 0;
+  padding: 8px 0;
 }
 
 .no-data {
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   color: #bbb;
 }
 
-.metric-row {
+.pbar-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
-.metric-label {
-  font-size: 0.8rem;
+.pbar-label {
+  font-size: 0.78rem;
   color: #888;
-  width: 32px;
+  width: 30px;
   flex-shrink: 0;
 }
 
-.metric-val {
-  font-size: 0.8rem;
+.pbar-track {
+  flex: 1;
+  height: 8px;
+  background: #f0f0f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.pbar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease, background 0.3s;
+}
+
+.pbar-val {
+  font-size: 0.78rem;
   color: #555;
-  width: 36px;
+  width: 32px;
   text-align: right;
   flex-shrink: 0;
 }
 
-/* Card Footer */
-.card-footer {
+/* Info Rows */
+.info-rows {
   display: flex;
-  justify-content: space-between;
-  font-size: 0.8rem;
-  color: #999;
-  padding-top: 12px;
-  border-top: 1px solid #f5f5f5;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.card-footer span {
+.info-row {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: #999;
+}
+
+.info-key {
+  color: #aaa;
+  flex-shrink: 0;
+}
+
+.info-val {
+  color: #666;
+}
+
+.info-sep {
+  color: #e0e0e0;
 }
 
 /* Empty State */
@@ -460,12 +570,7 @@ function goInstance(uuid) {
 }
 
 @media (max-width: 700px) {
-  .card-grid {
-    grid-template-columns: 1fr;
-  }
-  .toolbar {
-    flex-direction: column;
-    align-items: flex-start;
-  }
+  .card-grid { grid-template-columns: 1fr; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
 }
 </style>

@@ -200,11 +200,11 @@
           <mdui-icon name="monitoring" style="font-size:20px"></mdui-icon>
           延迟监控
         </span>
-        <mdui-segmented-button-group v-model="pingHours" selects="single">
-          <mdui-segmented-button :value="1" :selected="pingHours === 1" @click="changePingHours(1)">1h</mdui-segmented-button>
-          <mdui-segmented-button :value="6" :selected="pingHours === 6" @click="changePingHours(6)">6h</mdui-segmented-button>
-          <mdui-segmented-button :value="24" :selected="pingHours === 24" @click="changePingHours(24)">24h</mdui-segmented-button>
-        </mdui-segmented-button-group>
+        <div class="time-btns">
+          <button class="time-btn" :class="{ active: pingHours === 1 }" @click="changePingHours(1)">1h</button>
+          <button class="time-btn" :class="{ active: pingHours === 6 }" @click="changePingHours(6)">6h</button>
+          <button class="time-btn" :class="{ active: pingHours === 24 }" @click="changePingHours(24)">24h</button>
+        </div>
       </div>
       <div class="ping-grid" :class="{ loading: pingLoading }">
         <mdui-card v-for="row in heatmapData.rows" :key="row.name" class="ping-card">
@@ -658,6 +658,33 @@ const heatmapData = computed(() => {
   font-size: 1.1rem;
   font-weight: 600;
   color: #1f1f1f;
+}
+
+.time-btns {
+  display: flex;
+  gap: 4px;
+}
+
+.time-btn {
+  padding: 4px 12px;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  background: #fff;
+  color: #888;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.time-btn:hover {
+  color: #555;
+  border-color: #ccc;
+}
+
+.time-btn.active {
+  background: #f0f0f0;
+  color: #1a73e8;
+  border-color: #d0d0d0;
 }
 
 .ping-grid {
