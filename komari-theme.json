@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "author": "mogumc",
     "url": "https://github.com/komari-monitor/komari",
-    "preview": "preview.png",
+    "preview": "preview.webp",
     "configuration": {
         "type": "managed",
         "data": [
