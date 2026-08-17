@@ -1,5 +1,44 @@
-# Vue 3 + Vite
+<p align="center">
+  <img src="preview.webp" alt="Komari MDUI Preview" width="100%" />
+</p>
 
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+# Komari MDUI
 
-Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://vuejs.org/guide/scaling-up/tooling.html#ide-support).
+A clean Material Design 3 theme for [Komari](https://github.com/komari-monitor/komari), built with Vue 3 + Vite + [MDUI](https://www.mdui.org/).
+
+## Features
+
+- Pure white Material Design 3 style
+- Real-time server monitoring via RPC2 WebSocket
+- Node cards with CPU / Memory / Swap / Disk progress bars (color-coded)
+- Instance detail page with SVG charts and ping heatmap
+- Theme settings: background image, sort order, online-first
+
+## Theme Settings
+
+| Key | Type | Default | Description |
+|---|---|---|---|
+| `backgroundImage` | string | `""` | Background image URL, leave empty for plain background |
+| `sortBy` | select | `原顺序` | Default sort: `原顺序` / `名字` / `分类` |
+| `onlineFirst` | switch | `true` | Show online nodes first |
+
+## Development
+
+```bash
+npm install
+npm run dev
+```
+
+Vite dev server proxies `/api` to `localhost:8080`.
+
+## Build
+
+```bash
+npm run build
+```
+
+Output goes to `dist/`, deploy as a Komari managed theme.
+
+## License
+
+MIT
