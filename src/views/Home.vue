@@ -377,7 +377,7 @@ function goInstance(uuid) {
 }
 
 .group-btn:hover { color: #555; border-color: #ccc; }
-.group-btn.active { background: #f0f0f0; color: #1f1f1f; border-color: #ddd; font-weight: 500; }
+.group-btn.active { background: #f0f0f0; color: #1f1f1f; border-color: #ddd; }
 
 /* Card Grid */
 .card-grid {
