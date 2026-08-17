@@ -8,6 +8,12 @@
     "preview": "preview.png",
     "configuration": {
         "type": "managed",
-        "data": []
+        "data": [
+            { "name": { "zh-CN": "外观设置", "en": "Appearance" }, "type": "title" },
+            { "key": "backgroundImage", "name": { "zh-CN": "背景图片链接", "en": "Background Image URL" }, "type": "string", "default": "", "help": { "zh-CN": "全屏背景图片的完整 URL，留空则使用默认纯色背景" } },
+            { "name": { "zh-CN": "监控页设置", "en": "Monitor Settings" }, "type": "title" },
+            { "key": "sortBy", "name": { "zh-CN": "默认排序方式", "en": "Default Sort By" }, "type": "select", "options": "原顺序,名字,分类", "default": "原顺序", "help": { "zh-CN": "服务器列表的默认排序规则" } },
+            { "key": "onlineFirst", "name": { "zh-CN": "在线节点靠前", "en": "Online First" }, "type": "switch", "default": true, "help": { "zh-CN": "是否将在线节点排在列表前面" } }
+        ]
     }
 }

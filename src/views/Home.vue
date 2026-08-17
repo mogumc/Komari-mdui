@@ -139,6 +139,7 @@ import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { rpcCall, createRpcSocket } from '../utils/rpc'
 import { formatBytes, formatNetSpeed, formatUptime, remainingDays } from '../utils/format'
+import { useThemeSettings } from '../composables/useThemeSettings'
 
 const router = useRouter()
 const nodes = ref([])
@@ -147,6 +148,8 @@ const wsConnected = ref(false)
 const activeGroup = ref('__all__')
 let socket = null
 let pollTimer = null
+
+const { settings } = useThemeSettings()
 
 // Groups
 const groupList = computed(() => {
@@ -164,12 +167,25 @@ const displayNodes = computed(() => {
   if (activeGroup.value !== '__all__') {
     list = list.filter(n => (n.group || '').trim() === activeGroup.value)
   }
-  list.sort((a, b) => (a.weight ?? 0) - (b.weight ?? 0))
-  list.sort((a, b) => {
-    const aOn = isOnline(a.uuid) ? 0 : 1
-    const bOn = isOnline(b.uuid) ? 0 : 1
-    return aOn - bOn
-  })
+
+  const sortBy = settings.value.sortBy || '原顺序'
+  if (sortBy === '名字') {
+    list.sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+  } else if (sortBy === '分类') {
+    list.sort((a, b) => (a.group || '').localeCompare(b.group || '') || (a.name || '').localeCompare(b.name || ''))
+  } else {
+    list.sort((a, b) => (a.weight ?? 0) - (b.weight ?? 0))
+  }
+
+  const onlineFirst = settings.value.onlineFirst !== false
+  if (onlineFirst) {
+    list.sort((a, b) => {
+      const aOn = isOnline(a.uuid) ? 0 : 1
+      const bOn = isOnline(b.uuid) ? 0 : 1
+      return aOn - bOn
+    })
+  }
+
   return list
 })
 

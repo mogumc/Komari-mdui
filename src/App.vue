@@ -26,15 +26,32 @@
 </template>
 
 <script setup>
-import { ref, provide, onMounted, onUnmounted } from 'vue'
+import { ref, provide, onMounted, onUnmounted, watch } from 'vue'
 import { rpcCall } from './utils/rpc'
+import { useThemeSettings } from './composables/useThemeSettings'
 
 const siteName = ref('')
 const version = ref('')
 const wsConnected = ref(false)
 let statusTimer = null
 
+const { settings } = useThemeSettings()
+
 provide('wsConnected', wsConnected)
+
+watch(() => settings.value.backgroundImage, (url) => {
+  if (url) {
+    document.body.style.backgroundImage = `url(${url})`
+    document.body.style.backgroundSize = 'cover'
+    document.body.style.backgroundPosition = 'center'
+    document.body.style.backgroundAttachment = 'fixed'
+  } else {
+    document.body.style.backgroundImage = ''
+    document.body.style.backgroundSize = ''
+    document.body.style.backgroundPosition = ''
+    document.body.style.backgroundAttachment = ''
+  }
+}, { immediate: true })
 
 onMounted(async () => {
   try {
