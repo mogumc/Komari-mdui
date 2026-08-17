@@ -7,10 +7,7 @@
         <span style="font-size:0.9rem">返回</span>
       </router-link>
       <span class="header-title">{{ nodeName || '服务器详情' }}</span>
-      <mdui-badge
-        v-if="metrics"
-        :style="online ? '--mdui-badge-background:#e6f4ea;--mdui-badge-color:#34a853' : '--mdui-badge-background:#fce8e6;--mdui-badge-color:#ea4335'"
-      >{{ online ? '在线' : '离线' }}</mdui-badge>
+      <span v-if="metrics" class="status-dot" :class="online ? 'on' : 'off'"></span>
     </div>
 
     <!-- Hardware Info Cards -->
@@ -524,6 +521,16 @@ const heatmapData = computed(() => {
   text-align: center;
   color: #1f1f1f;
 }
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-dot.on { background: #34a853; }
+.status-dot.off { background: #ea4335; }
 
 /* Hardware Info */
 .hw-grid {
