@@ -22,6 +22,12 @@ A clean Material Design 3 theme for [Komari](https://github.com/komari-monitor/k
 | `sortBy` | select | `原顺序` | Default sort: `原顺序` / `名字` / `分类` |
 | `onlineFirst` | switch | `true` | Show online nodes first |
 
+## Preview
+
+<img src="F:\WorkSpace\Komari-MDUI\preview\main.png" alt="Komari MDUI Preview" width="100%" />
+
+<img src="F:\WorkSpace\Komari-MDUI\preview\instance.png" alt="Komari MDUI Preview" width="100%" />
+
 ## Development
 
 ```bash
