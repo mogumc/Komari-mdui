@@ -24,9 +24,9 @@ A clean Material Design 3 theme for [Komari](https://github.com/komari-monitor/k
 
 ## Preview
 
-<img src="F:\WorkSpace\Komari-MDUI\preview\main.png" alt="Komari MDUI Preview" width="100%" />
+<img src="preview\main.png" alt="Komari MDUI Preview" width="100%" />
 
-<img src="F:\WorkSpace\Komari-MDUI\preview\instance.png" alt="Komari MDUI Preview" width="100%" />
+<img src="preview\instance.png" alt="Komari MDUI Preview" width="100%" />
 
 ## Development
 
